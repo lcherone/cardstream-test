@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <% include ../partials/head %>
+  </head>
+
+  <body>
+    <div id="app" v-cloak>
+      <% include ../partials/header %>
+
+      <main role="main" class="container" v-if="state.page === 'index'">
+        <div class="alert alert-info" role="alert">
+          <strong>About:</strong>
+          Built to test cardstream's hosted form process, using express, vue and
+          bootstrap.
+        </div>
+        <div class="col-md-4" v-for="item in inventory">
+          <div class="card" style="width: 18rem;">
+            <img
+              class="card-img-top"
+              :src="`https://via.placeholder.com/300x200?text=${item.name.replace('/ /','+')}`"
+            />
+            <div class="card-body">
+              <h5 class="card-title row">
+                <span class="col-7">{{ item.name }}</span>
+                <span class="col-5 text-right">&pound;{{ item.amount }}</span>
+              </h5>
+              <p class="card-text">{{ item.description }}</p>
+              <a
+                href="javascript:void(0)"
+                class="btn btn-primary"
+                @click="addToCart(item)"
+                >Add to cart (&pound;{{ item.amount }})</a
+              >
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <main role="main" class="container" v-if="state.page === 'basket'">
+        <div class="row">
+          <div class="col-sm-4 order-sm-2 mb-4 px-2">
+            <div class="card mb-4">
+              <div class="card-header">
+                Basket
+                <a
+                  v-if="form.values.basket.length"
+                  class="btn btn-xs btn-danger float-right"
+                  href="javascript:void(0)"
+                  @click="form.values.basket = []"
+                  >Empty</a
+                >
+              </div>
+              <div class="card-body p-1">
+                <ul class="list-group mb-3">
+                  <li
+                    v-for="(item, index) in form.values.basket"
+                    class="list-group-item border-top-0 border-left-0 border-right-0 border-bottom d-flex justify-content-between lh-condensed"
+                  >
+                    <div>
+                      <h6 class="my-0">{{ item.name }}</h6>
+                      <small class="text-muted">{{ item.description }}</small>
+                    </div>
+                    <span class="text-muted"
+                      >&pound;{{ item.amount.toFixed(2) }}</span
+                    >
+                    <span style="cursor: pointer;" @click="removeItem(index)"
+                      ><i class="fa fa-times text-danger"></i
+                    ></span>
+                  </li>
+                  <li
+                    class="list-group-item border-top-0 border-left-0 border-right-0 border-bottom-0 d-flex justify-content-between"
+                  >
+                    <span>Total (GBP)</span>
+                    <strong>&pound;{{ total_basket_amount.toFixed(2) }}</strong>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="card bg-light">
+              <div class="card-header">
+                <i class="fa fa-home"></i>
+                Our Address
+              </div>
+              <div class="card-body">
+                <address></address>
+                <p></p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-8 order-sm-1 px-1">
+            <div class="card mb-3">
+              <div class="card-header">
+                Test Users
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">First</th>
+                        <th scope="col">Last</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Address</th>
+                        <th scope="col"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in users">
+                        <th scope="row">{{ item.firstName }}</th>
+                        <td>{{ item.lastName }}</td>
+                        <td>{{ item.email }}</td>
+                        <td>
+                          <address>
+                            <template
+                              v-if="a"
+                              v-for="a in Object.values(item.address)"
+                              >{{ a }}<br
+                            /></template>
+                          </address>
+                        </td>
+                        <td>
+                          <button
+                            class="btn btn-xs btn-primary"
+                            @click="setUser(item)"
+                          >
+                            Use
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-3" v-if="state.cards.length">
+                <div class="card-header">
+                    Test Card
+                </div>
+                <div class="card-body">
+                <div class="col-md-12">
+                    <select
+                        class="custom-select d-block w-100"
+                        :class="{'is-invalid': form.errors.card }"
+                        id="card"
+                        v-model="state.selected_card"
+                        placeholder="Select card..."
+                        :readonly="state.processing"
+                        required
+                    >
+                    <option value="" selected>Choose card...</option>
+                    <option :value="index" v-for="(card, index) in state.cards"
+                      >{{ card.type }}: {{ card.number }}</option
+                    >
+                  </select>
+                  <div class="invalid-feedback" v-if="form.errors.card">
+                    {{ form.errors.country }}
+                  </div>
+                  <div class="feedback text-muted" v-if="!form.errors.card">
+                    Test cards can overwrite billing address.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card mb-3"
+              v-if="state.cards.length && state.selected_card !== ''"
+            >
+              <div class="card-header">
+                Test billing address
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="firstName">First name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      :class="{'is-invalid': form.errors.firstName }"
+                      id="firstName"
+                      v-model="form.values.firstName"
+                      placeholder="Enter your first name..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.firstName">
+                      {{ form.errors.firstName }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="lastName">Last name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      :class="{'is-invalid': form.errors.lastName }"
+                      id="lastName"
+                      v-model="form.values.lastName"
+                      placeholder="Enter your last name..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.lastName">
+                      {{ form.errors.lastName }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12 mb-3 px-1">
+                    <label for="email">Email</label>
+                    <input
+                      type="email"
+                      class="form-control"
+                      :class="{'is-invalid': form.errors.email }"
+                      id="email"
+                      v-model="form.values.email"
+                      placeholder="Enter your email address..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.email">
+                      {{ form.errors.email }}
+                    </div>
+                  </div>
+                  <div class="col-md-12 mb-3 px-1">
+                    <label for="address">Address</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      :class="{'is-invalid': form.errors.address_1 }"
+                      id="address"
+                      v-model="form.values.address_1"
+                      placeholder="Enter the first line of your address..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.address_1">
+                      {{ form.errors.address_1 }}
+                    </div>
+                  </div>
+                  <div class="col-md-12 mb-3 px-1">
+                    <label for="address2"
+                      >Address 2
+                      <span class="text-muted">(Optional)</span></label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="address2"
+                      v-model="form.values.address_2"
+                      v-model="form.values.address_2"
+                      placeholder="Enter the second line of your address..."
+                      :readonly="state.processing"
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.address_2">
+                      {{ form.errors.address_2 }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="town">Town</label>
+                    <input
+                      type="text"
+                      id="town"
+                      v-model="form.values.town"
+                      class="form-control"
+                      :class="{ 'is-invalid': form.errors.town }"
+                      placeholder="Enter address town..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.town">
+                      {{ form.errors.town }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="county">County</label>
+                    <input
+                      type="text"
+                      id="county"
+                      v-model="form.values.county"
+                      class="form-control"
+                      :class="{ 'is-invalid': form.errors.county }"
+                      placeholder="Enter address county..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.county">
+                      {{ form.errors.county }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="country">Country</label>
+                    <select
+                      class="custom-select d-block w-100"
+                      :class="{'is-invalid': form.errors.country }"
+                      id="country"
+                      v-model="form.values.country"
+                      placeholder="Select address country..."
+                      :readonly="state.processing"
+                      required
+                    >
+                      <option value="United Kingdom">United Kingdom</option>
+                    </select>
+                    <div class="invalid-feedback" v-if="form.errors.country">
+                      {{ form.errors.country }}
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3 px-1">
+                    <label for="postcode">Postcode</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      :class="{'is-invalid': form.errors.postcode }"
+                      id="postcode"
+                      v-model="form.values.postcode"
+                      placeholder="Enter your postcode..."
+                      :readonly="state.processing"
+                      required
+                    />
+                    <div class="invalid-feedback" v-if="form.errors.postcode">
+                      {{ form.errors.postcode }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="card"
+              v-if="state.cards.length && state.selected_card  !== ''"
+            >
+              <div class="card-body">
+                <div class="custom-control custom-checkbox">
+                  <input
+                    type="checkbox"
+                    class="custom-control-input"
+                    v-model="form.values.tos_agree"
+                    :class="{'is-invalid': form.errors.tos_agree }"
+                    id="tos_agree"
+                    :readonly="state.processing"
+                  />
+                  <label class="custom-control-label" for="tos_agree"
+                    >Agree to
+                    <a
+                      href="javascript:alert('This is a testing script, its not real!')"
+                      >terms and conditions</a
+                    >.</label
+                  >
+                  <div class="invalid-feedback" v-if="form.errors.tos_agree">
+                    {{ form.errors.tos_agree }}
+                  </div>
+                </div>
+                <hr class="mb-4" />
+                <button
+                  class="btn btn-primary btn-lg btn-block"
+                  type="button"
+                  @click="submit()"
+                  :class="{'disabled': state.processing }"
+                  :disabled="state.processing"
+                >
+                  <i class="fa fa-spinner fa-spin" v-if="state.processing"></i>
+                  Pay Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <main class="container" v-if="state.page === 'payment'">
+        <div class="row">
+          <div class="col-12">
+            <div class="card mb-4">
+              <div class="card-header">
+                  Payment Result
+              </div>
+              <div class="card-body">
+                  <pre>{{ state.payment }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+              <div class="card mb-4">
+                <div class="card-header">
+                    Payment Response
+                </div>
+                <div class="card-body">
+
+                  <button class="btn mb-2 btn-xs btn-success" @click="testSignature(state.payment)">Test Signature</button>
+                  <span :class="`ml-2 ${signature_test.type ? signature_test.type : ''}`" v-if="signature_test.type" v-html="signature_test.message"></span>
+  
+                  <div class="mb-2">
+                    <strong>Expected Signature:</strong><br>
+                      {{ state.payment.signature }}
+                  </div>
+  
+                  <div>
+                    <strong>POST Body:</strong><br>
+                    <pre class="bg-light border p-1 small">{{ state.payment }}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </main>
+
+      <main class="container" v-if="state.page === 'signature_test'">
+        <div class="row">
+          <div class="col-12">
+            <div class="card mb-4">
+              <div class="card-header">
+                  Signature test
+                  <form action="https://gateway.cardstream.com/devtools/sigtest.php?key=Circle4Take40Idea" method="POST">
+                    <input type="hidden" :name="name" :value="value" v-if="name !== 'signature'" v-for="(value, name) in example_response">
+                    <input style="margin-top:-25px" class="btn btn-xs btn-primary float-right" type="submit" value="Test on cardstream.com">
+                  </form>
+              </div>
+              <div class="card-body">
+                  For testing if response signature is valid against <code>Circle4Take40Idea</code> test 
+                  signing key using the <code>cardstream.verifySignature()</code> method.
+                  
+                  It uses the last <i>real</i> response from cardstream which is stored in <code>db.json</code> or defaults
+                  to a valid transaction.
+                  
+                <hr/>
+
+                <h5>Example payment response</h5>
+
+                <button class="btn mb-2 btn-xs btn-success" @click="testSignature(example_response)">Test Signature</button>
+                <span :class="`ml-2 ${signature_test.type ? signature_test.type : ''}`" v-if="signature_test.type" v-html="signature_test.message"></span>
+
+                <div class="mb-2">
+                  <strong>Expected Signature:</strong><br>
+                    {{ example_response.signature }}
+                </div>
+
+                <div>
+                  <strong>POST Body:</strong><br>
+                  <pre class="bg-light border p-1 small">{{ example_response }}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <% include ../partials/footer %>
+
+    <script>
+      var globals = <%- JSON.stringify(globals) %>;
+    </script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+<header>
+  <nav class="navbar navbar-expand-sm navbar-dark bg-dark mb-3">
+      <div class="container">
+      <a class="navbar-brand" href="javascript:void(0)" @click="state.page = 'index'">Cardstream Test</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+              <li class="nav-item">
+                  <a class="nav-link" href="javascript:void(0)" @click="state.page = 'index'">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" @click="state.page = 'signature_test'">Signiture Test</a>
+              </li>
+          </ul>
+          <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" @click="state.page = 'basket'">Basket (&pound;{{ total_basket_amount.toFixed(2) }})</a>
+              </li>
+          </ul>
+      </div>
+    </div>
+  </nav>
+</header>

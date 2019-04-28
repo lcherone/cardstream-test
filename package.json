@@ -1,0 +1,25 @@
+{
+  "name": "cardstream",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development HOST=0.0.0.0 PORT=8080 DEBUG=app:* nodemon src/index.js --watch ./src"
+  },
+  "dependencies": {
+    "@base/cardstream": "file:./src/@base/cardstream",
+    "@base/encryption": "file:./src/@base/encryption",
+    "@base/express": "file:./src/@base/express",
+    "@base/jsonwebtoken": "file:./src/@base/jsonwebtoken",
+    "@base/socket.io": "file:./src/@base/socket.io",
+    "axios": "^0.16.2",
+    "conf": "^4.0.1",
+    "cross-env": "^5.0.1",
+    "debug": "^3.2.6",
+    "dotenv": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "1.18.4"
+  },
+  "keywords": []
+}

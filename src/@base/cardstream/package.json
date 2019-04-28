@@ -1,0 +1,8 @@
+{
+  "name": "@base/cardstream",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "uuid": "^3.3.2"
+  }
+}
